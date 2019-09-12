@@ -46,9 +46,15 @@ public class MyFlappyBird extends ApplicationAdapter {
         //Velocidade de queda
         velocidadeQueda++;
 
-        if (posicaoInicialVertical > 0)
-            posicaoInicialVertical = posicaoInicialVertical - velocidadeQueda;
+        //Touch com o Gdx
+        if (Gdx.input.justTouched()) {
+            velocidadeQueda = -30;
+        }
 
+
+        if (posicaoInicialVertical > 0 || velocidadeQueda < 0) {
+            posicaoInicialVertical = posicaoInicialVertical - velocidadeQueda;
+        }
 
         batch.begin();
 
