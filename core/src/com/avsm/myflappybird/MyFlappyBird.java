@@ -7,29 +7,53 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class MyFlappyBird extends ApplicationAdapter {
+
     private SpriteBatch batch;
-    private Texture passaro;
+    private Texture[] passaros;
     private Texture fundo;
-    private int movimento = 0;
-    private int meioDaTela;
+
+    //Atributos de configuração
+    private int larguraTela;
+    private int alturaTela;
+
+    private float posicaoInicialVertical;
+    private float variacao = 0;
+    private float velocidadeQueda = 0;
 
     @Override
     public void create() {
         Gdx.app.log("ANDRE", "Entrou no create.");
         batch = new SpriteBatch();
-        passaro = new Texture("passaro1.png");
+
+        larguraTela = Gdx.graphics.getWidth();
+        alturaTela = Gdx.graphics.getHeight();
+        posicaoInicialVertical = alturaTela / 2;
+
+        passaros = new Texture[3];
+        passaros[0] = new Texture("passaro1.png");
+        passaros[1] = new Texture("passaro2.png");
+        passaros[2] = new Texture("passaro3.png");
+
         fundo = new Texture("fundo.png");
     }
 
     @Override
     public void render() {
-        movimento++;
+        //Bater de asas do passaro
+        variacao += (Gdx.graphics.getDeltaTime() * 10);
+        if (variacao > 2) variacao = 0;
+
+        //Velocidade de queda
+        velocidadeQueda++;
+
+        if (posicaoInicialVertical > 0)
+            posicaoInicialVertical = posicaoInicialVertical - velocidadeQueda;
+
 
         batch.begin();
 
-        batch.draw(fundo, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        meioDaTela = Gdx.graphics.getHeight() / 2;
-        batch.draw(passaro, movimento, meioDaTela, 100, 77);
+        batch.draw(fundo, 0, 0, larguraTela, alturaTela);
+        batch.draw(passaros[(int) variacao], 50, posicaoInicialVertical, 100, 68);
 
         batch.end();
     }
