@@ -116,7 +116,9 @@ public class MyFlappyBird extends ApplicationAdapter {
 
         //Inicio do jogo
         if (estadoDoJogo == 0) {
-            if (Gdx.input.justTouched()) estadoDoJogo = 1;
+            if (Gdx.input.justTouched()) {
+                estadoDoJogo = 1;
+            }
         } else {
             //Velocidade de queda
             velocidadeQueda++;
@@ -152,6 +154,7 @@ public class MyFlappyBird extends ApplicationAdapter {
                     pontuacao = 0;
                     estadoDoJogo = 0;
                     velocidadeQueda = 0;
+                    marcouPonto = false;
                     posicaoInicialVertical = alturaTela / 2;
                     posicaoMovimentoCanoHorizontal = larguraTela;
                 }
