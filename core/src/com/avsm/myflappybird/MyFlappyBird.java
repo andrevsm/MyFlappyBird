@@ -33,7 +33,7 @@ public class MyFlappyBird extends ApplicationAdapter {
     private OrthographicCamera camera;
     private Viewport viewport;
     private final float VIRTUAL_WIDTH = 768;
-    private final float VIRTUAL_HEIGHT = 1024;
+    private final float VIRTUAL_HEIGHT = 1280;
 
 //    private ShapeRenderer shape;
 
@@ -91,8 +91,8 @@ public class MyFlappyBird extends ApplicationAdapter {
         passaros[1] = new Texture("passaro2.png");
         passaros[2] = new Texture("passaro3.png");
         fundo = new Texture("fundo.png");
-        canoBaixo = new Texture("cano_baixo.png");
-        canoTopo = new Texture("cano_topo.png");
+        canoBaixo = new Texture("cano_baixo_maior.png");
+        canoTopo = new Texture("cano_topo_maior.png");
         gameOver = new Texture("game_over.png");
 
         posicaoInicialVertical = alturaTela / 2;
