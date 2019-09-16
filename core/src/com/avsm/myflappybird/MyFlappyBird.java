@@ -23,19 +23,22 @@ public class MyFlappyBird extends ApplicationAdapter {
     private Texture fundo;
     private Texture canoBaixo;
     private Texture canoTopo;
+    private Texture canoBaixo2;
+    private Texture canoTopo2;
     private Texture gameOver;
     private Random numeroRandomico;
-    private BitmapFont fonte;
+    private BitmapFont placar;
     private BitmapFont mensagem;
     private Circle passaroCirculo;
     private Rectangle retanguloCanoTopo;
     private Rectangle retanguloCanoBaixo;
+    private Rectangle retanguloCanoTopo2;
+    private Rectangle retanguloCanoBaixo2;
     private OrthographicCamera camera;
     private Viewport viewport;
     private final float VIRTUAL_WIDTH = 768;
     private final float VIRTUAL_HEIGHT = 1280;
 
-//    private ShapeRenderer shape;
 
     //Atributos de configuração
     private float larguraTela;
@@ -48,64 +51,29 @@ public class MyFlappyBird extends ApplicationAdapter {
     //Estado 2 = game over.
     private int estadoDoJogo = 0;
 
-    private float posicaoInicialVertical;
+    private float posicaoInicialVerticalDoPassaro;
     private float variacao = 0;
     private float velocidadeQueda = 0;
     private float posicaoMovimentoCanoHorizontal;
+    private float posicaoMovimentoCano2Horizontal;
     private float espacoEntreCanos;
     private float deltaTime;
     private float alturaEntreCanosRandomica;
+    private float alturaEntreCanosRandomica2;
     private boolean marcouPonto;
 
     @Override
     public void create() {
-        Gdx.app.log("ANDRE", "Entrou no create.");
-        batch = new SpriteBatch();
-
-        //Configuração de Camera
-        camera = new OrthographicCamera();
-        camera.position.set(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, 0);
-        viewport = new StretchViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
-
-        larguraTela = VIRTUAL_WIDTH;
-        alturaTela = VIRTUAL_HEIGHT;
-
-        numeroRandomico = new Random();
-
-        fonte = new BitmapFont();
-        fonte.setColor(Color.WHITE);
-        fonte.getData().setScale(6);
-
-        mensagem = new BitmapFont();
-        mensagem.setColor(Color.WHITE);
-        mensagem.getData().setScale(3);
-
-        passaroCirculo = new Circle();
-
-//        retanguloCanoBaixo = new Rectangle();
-//        retanguloCanoTopo = new Rectangle();
-//        shape = new ShapeRenderer();
-
-        passaros = new Texture[3];
-        passaros[0] = new Texture("passaro1.png");
-        passaros[1] = new Texture("passaro2.png");
-        passaros[2] = new Texture("passaro3.png");
-        fundo = new Texture("fundo.png");
-        canoBaixo = new Texture("cano_baixo_maior.png");
-        canoTopo = new Texture("cano_topo_maior.png");
-        gameOver = new Texture("game_over.png");
-
-        posicaoInicialVertical = alturaTela / 2;
-        posicaoMovimentoCanoHorizontal = larguraTela - 100;
-        espacoEntreCanos = 250;
-
+        inicializandoObjetos();
+        configInicial();
     }
 
     @Override
     public void render() {
+        //Atualizar visualização da camera
         camera.update();
 
-//      Limpar frames de execuções anteriores
+        //Limpar frames de execuções anteriores
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         deltaTime = Gdx.graphics.getDeltaTime();
@@ -116,78 +84,193 @@ public class MyFlappyBird extends ApplicationAdapter {
 
         //Inicio do jogo
         if (estadoDoJogo == 0) {
-            if (Gdx.input.justTouched()) {
-                estadoDoJogo = 1;
-            }
+            inicioJogo();
         } else {
-            //Velocidade de queda
+            //Velocidade de queda do passaro
             velocidadeQueda++;
 
-            if (posicaoInicialVertical > 0 || velocidadeQueda < 0) {
-                posicaoInicialVertical = posicaoInicialVertical - velocidadeQueda;
+            //Queda do Passaro na posição vertical
+            if (posicaoInicialVerticalDoPassaro > 0 || velocidadeQueda < 0) {
+                posicaoInicialVerticalDoPassaro = posicaoInicialVerticalDoPassaro - velocidadeQueda;
             }
 
             if (estadoDoJogo == 1) {
+                //Velocidade de movimentação dos Canos
                 posicaoMovimentoCanoHorizontal -= deltaTime * 500;
+                posicaoMovimentoCano2Horizontal -= deltaTime * 500;
 
-                //Touch com o Gdx
+                //Touch do passaro
                 if (Gdx.input.justTouched()) {
                     velocidadeQueda = -15;
                 }
-                //Verifica se o cano saiu da tela
+
+                //Verifica se o cano 1 saiu da tela
                 if (posicaoMovimentoCanoHorizontal < -canoTopo.getWidth()) {
                     posicaoMovimentoCanoHorizontal = larguraTela;
                     alturaEntreCanosRandomica = numeroRandomico.nextInt(500) - 250;
                     marcouPonto = false;
                 }
 
-                //Verifica pontuação
-                if (posicaoMovimentoCanoHorizontal < 120) {
+                //Verifica se o cano 2 saiu da tela
+                if (posicaoMovimentoCano2Horizontal < -canoTopo.getWidth()) {
+                    posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
+                    alturaEntreCanosRandomica2 = numeroRandomico.nextInt(300) - 150;
+                    marcouPonto = false;
+                }
+
+                //Verifica se marcou ponto
+                if (posicaoMovimentoCanoHorizontal < 120 ||
+                        posicaoMovimentoCano2Horizontal < 120) {
                     if (!marcouPonto) {
                         pontuacao++;
                         marcouPonto = true;
                     }
                 }
+
             } else {
-                //Tela de game over
-                if (Gdx.input.justTouched()) {
-                    pontuacao = 0;
-                    estadoDoJogo = 0;
-                    velocidadeQueda = 0;
-                    marcouPonto = false;
-                    posicaoInicialVertical = alturaTela / 2;
-                    posicaoMovimentoCanoHorizontal = larguraTela;
-                }
-
-
+                //FimDeJogo
+                reiniciarJogo();
             }
-
         }
 
+        configDoBatch();
+
+        instanciandoAsFormasDeColisao();
+
+        verificaColisao();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height);
+    }
+
+    private void inicializandoObjetos() {
+        batch = new SpriteBatch();
+        camera = new OrthographicCamera();
+
+        //Numero randomico de movimentação dos canos
+        numeroRandomico = new Random();
+
+        //Placar de Pontos
+        placar = new BitmapFont();
+        placar.setColor(Color.WHITE);
+        placar.getData().setScale(6);
+
+        //Mensagem de GameOver
+        mensagem = new BitmapFont();
+        mensagem.setColor(Color.WHITE);
+        mensagem.getData().setScale(3);
+
+        //Forma do Passaro para colisão
+        passaroCirculo = new Circle();
+
+        //Texturas do passaro
+        passaros = new Texture[3];
+        passaros[0] = new Texture("passaro1.png");
+        passaros[1] = new Texture("passaro2.png");
+        passaros[2] = new Texture("passaro3.png");
+
+        //Textura do plano de fundo
+        fundo = new Texture("fundo.png");
+
+        //Textura dos canos
+        canoBaixo = new Texture("cano_baixo_maior.png");
+        canoTopo = new Texture("cano_topo_maior.png");
+        canoBaixo2 = new Texture("cano_baixo_maior.png");
+        canoTopo2 = new Texture("cano_topo_maior.png");
+
+        //Textura de GameOver
+        gameOver = new Texture("game_over.png");
+    }
+
+    private void configInicial() {
+        //Configuração de posicionamento da camera
+        camera.position.set(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, 0);
+        viewport = new StretchViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
+
+        larguraTela = VIRTUAL_WIDTH;
+        alturaTela = VIRTUAL_HEIGHT;
+
+        //Posição que o Passaro começa
+        posicaoInicialVerticalDoPassaro = alturaTela / 2;
+
+        //Posição que os Canos começam e espaçamento
+        posicaoMovimentoCanoHorizontal = larguraTela;
+        posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
+        espacoEntreCanos = 250;
+    }
+
+    private void inicioJogo() {
+        //Tocou na tela para começar
+        if (Gdx.input.justTouched()) {
+            estadoDoJogo = 1;
+        }
+    }
+
+    private void reiniciarJogo() {
+        //Tocou na tela para reiniciar
+        if (Gdx.input.justTouched()) {
+            pontuacao = 0;
+            estadoDoJogo = 0;
+            velocidadeQueda = 0;
+            marcouPonto = false;
+            posicaoInicialVerticalDoPassaro = alturaTela / 2;
+            posicaoMovimentoCanoHorizontal = larguraTela;
+            posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
+        }
+    }
+
+    private void verificaColisao() {
+        //Verifica se houve colisão
+        if (Intersector.overlaps(passaroCirculo, retanguloCanoBaixo)
+                || Intersector.overlaps(passaroCirculo, retanguloCanoTopo)
+                || Intersector.overlaps(passaroCirculo, retanguloCanoTopo2)
+                || Intersector.overlaps(passaroCirculo, retanguloCanoBaixo2)
+                || posicaoInicialVerticalDoPassaro <= 0
+                || posicaoInicialVerticalDoPassaro >= alturaTela) {
+            estadoDoJogo = 2;
+        }
+    }
+
+    private void configDoBatch() {
         //Configurar dados de projeção da camera
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
 
+        //Desenhando plano de fundo
         batch.draw(fundo, 0, 0, larguraTela, alturaTela);
+
+        //Desenhando os Canos
         batch.draw(canoTopo, posicaoMovimentoCanoHorizontal, alturaTela / 2
                 + espacoEntreCanos / 2 + alturaEntreCanosRandomica);
-
         batch.draw(canoBaixo, posicaoMovimentoCanoHorizontal, alturaTela / 2
                 - canoBaixo.getHeight() - espacoEntreCanos / 2 + alturaEntreCanosRandomica);
+        batch.draw(canoTopo2, posicaoMovimentoCano2Horizontal, alturaTela / 2
+                + espacoEntreCanos / 2 + alturaEntreCanosRandomica2);
+        batch.draw(canoBaixo2, posicaoMovimentoCano2Horizontal, alturaTela / 2
+                - canoBaixo.getHeight() - espacoEntreCanos / 2 + alturaEntreCanosRandomica2);
 
-        batch.draw(passaros[(int) variacao], 120, posicaoInicialVertical);
-        fonte.draw(batch, String.valueOf(pontuacao), larguraTela / 2, alturaTela - 50);
+        //Desenhando array de passaros
+        batch.draw(passaros[(int) variacao], 120, posicaoInicialVerticalDoPassaro);
 
+        //Desenhando pontuação
+        placar.draw(batch, String.valueOf(pontuacao), larguraTela / 2, alturaTela - 50);
+
+        //Tela de fim de jogo
         if (estadoDoJogo == 2) {
             batch.draw(gameOver, larguraTela / 2 - gameOver.getWidth() / 2, alturaTela / 2);
-            mensagem.draw(batch, "Toque para reiniciar!", larguraTela / 2 - 200, alturaTela / 2 - gameOver.getHeight() / 2);
+            mensagem.draw(batch, "Toque para reiniciar!",
+                    larguraTela / 2 - 200, alturaTela / 2 - gameOver.getHeight() / 2);
         }
 
         batch.end();
+    }
 
+    private void instanciandoAsFormasDeColisao() {
         passaroCirculo.set(120 + passaros[0].getWidth() / 2,
-                posicaoInicialVertical + passaros[0].getHeight() / 2,
+                posicaoInicialVerticalDoPassaro + passaros[0].getHeight() / 2,
                 passaros[0].getWidth() / 2);
 
         retanguloCanoBaixo = new Rectangle(
@@ -202,29 +285,17 @@ public class MyFlappyBird extends ApplicationAdapter {
                 canoTopo.getWidth(), canoTopo.getHeight()
         );
 
-//        //Desenhando as formas
-//        shape.begin(ShapeRenderer.ShapeType.Filled);
-//
-//        shape.circle(passaroCirculo.x, passaroCirculo.y, passaroCirculo.radius);
-//        shape.rect(retanguloCanoBaixo.x, retanguloCanoBaixo.y, retanguloCanoBaixo.width, retanguloCanoBaixo.height);
-//        shape.rect(retanguloCanoTopo.x, retanguloCanoTopo.y, retanguloCanoTopo.width, retanguloCanoTopo.height);
-//        shape.setColor(Color.RED);
-//
-//        shape.end();
+        retanguloCanoBaixo2 = new Rectangle(
+                posicaoMovimentoCano2Horizontal, alturaTela / 2 - canoBaixo.getHeight()
+                - espacoEntreCanos / 2 + alturaEntreCanosRandomica2,
+                canoBaixo.getWidth(), canoBaixo.getHeight()
+        );
 
-        //Teste de colisão
-        if (Intersector.overlaps(passaroCirculo, retanguloCanoBaixo)
-                || Intersector.overlaps(passaroCirculo, retanguloCanoTopo)
-                || posicaoInicialVertical <= 0
-                || posicaoInicialVertical >= alturaTela) {
-            estadoDoJogo = 2;
-
-        }
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        viewport.update(width, height);
+        retanguloCanoTopo2 = new Rectangle(
+                posicaoMovimentoCano2Horizontal, alturaTela / 2
+                + espacoEntreCanos / 2 + alturaEntreCanosRandomica2,
+                canoTopo.getWidth(), canoTopo.getHeight()
+        );
     }
 }
 
