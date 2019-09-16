@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
@@ -45,6 +46,9 @@ public class MyFlappyBird extends ApplicationAdapter {
     private float alturaTela;
 
     private int pontuacao = 0;
+
+    private int rotacaoPassaro = 0;
+    private Sprite sprite;
 
     //Estado 0 = jogo não iniciado.
     //Estado 1 = jogo iniciado.
@@ -88,7 +92,7 @@ public class MyFlappyBird extends ApplicationAdapter {
         } else {
             //Velocidade de queda do passaro
             velocidadeQueda++;
-
+            rotacaoPassaro -= deltaTime * 60;
             //Queda do Passaro na posição vertical
             if (posicaoInicialVerticalDoPassaro > 0 || velocidadeQueda < 0) {
                 posicaoInicialVerticalDoPassaro = posicaoInicialVerticalDoPassaro - velocidadeQueda;
@@ -96,11 +100,12 @@ public class MyFlappyBird extends ApplicationAdapter {
 
             if (estadoDoJogo == 1) {
                 //Velocidade de movimentação dos Canos
-                posicaoMovimentoCanoHorizontal -= deltaTime * 500;
-                posicaoMovimentoCano2Horizontal -= deltaTime * 500;
+                posicaoMovimentoCanoHorizontal -= deltaTime * 400;
+                posicaoMovimentoCano2Horizontal -= deltaTime * 400;
 
                 //Touch do passaro
                 if (Gdx.input.justTouched()) {
+                    rotacaoPassaro -= rotacaoPassaro - 20;
                     velocidadeQueda = -15;
                 }
 
@@ -114,7 +119,7 @@ public class MyFlappyBird extends ApplicationAdapter {
                 //Verifica se o cano 2 saiu da tela
                 if (posicaoMovimentoCano2Horizontal < -canoTopo.getWidth()) {
                     posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
-                    alturaEntreCanosRandomica2 = numeroRandomico.nextInt(300) - 150;
+                    alturaEntreCanosRandomica2 = numeroRandomico.nextInt(400) - 200;
                     marcouPonto = false;
                 }
 
@@ -209,6 +214,7 @@ public class MyFlappyBird extends ApplicationAdapter {
     }
 
     private void reiniciarJogo() {
+        rotacaoPassaro = 0;
         //Tocou na tela para reiniciar
         if (Gdx.input.justTouched()) {
             pontuacao = 0;
@@ -253,7 +259,11 @@ public class MyFlappyBird extends ApplicationAdapter {
                 - canoBaixo.getHeight() - espacoEntreCanos / 2 + alturaEntreCanosRandomica2);
 
         //Desenhando array de passaros
-        batch.draw(passaros[(int) variacao], 120, posicaoInicialVerticalDoPassaro);
+//        batch.draw(passaros[(int) variacao], 120, posicaoInicialVerticalDoPassaro);
+        sprite = new Sprite(passaros[(int) variacao]);
+        sprite.rotate(rotacaoPassaro);
+        sprite.setPosition(120, posicaoInicialVerticalDoPassaro);
+        sprite.draw(batch);
 
         //Desenhando pontuação
         placar.draw(batch, String.valueOf(pontuacao), larguraTela / 2, alturaTela - 50);
