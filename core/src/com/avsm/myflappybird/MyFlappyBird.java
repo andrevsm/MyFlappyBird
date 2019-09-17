@@ -35,12 +35,14 @@ public class MyFlappyBird extends ApplicationAdapter {
     private Texture canoTopo2;
     private Texture gameOver;
     private Texture playButton;
+    private ImageButton playImageButton;
+    private Texture refreshButton;
+    private ImageButton refreshImageButton;
     private Random numeroRandomico;
     private BitmapFont placar;
     private BitmapFont mensagemGameOver;
     private BitmapFont tituloGame;
     private Circle passaroCirculo;
-    private ImageButton playImageButton;
     private Rectangle retanguloCanoTopo;
     private Rectangle retanguloCanoBaixo;
     private Rectangle retanguloCanoTopo2;
@@ -183,9 +185,11 @@ public class MyFlappyBird extends ApplicationAdapter {
 
         //Textura do play button
         playButton = new Texture("play_button.png");
-        TextureRegion myTextureRegion = new TextureRegion(playButton);
-        TextureRegionDrawable myTexRegionDrawable = new TextureRegionDrawable(myTextureRegion);
-        playImageButton = new ImageButton(myTexRegionDrawable);
+        playImageButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(playButton)));
+
+        //Textura do refresh button
+        refreshButton = new Texture("refresh_button.png");
+        refreshImageButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(refreshButton)));
 
         //Texturas do passaro
         passaros = new Texture[3];
@@ -217,10 +221,12 @@ public class MyFlappyBird extends ApplicationAdapter {
         //Config do stage
         stage = new Stage(new StretchViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera));
         Gdx.input.setInputProcessor(stage);
-        stage.addActor(playImageButton);
 
-        //Posição do botao na tela
+        //Posição do botao play na tela
         playImageButton.setPosition(larguraTela / 2 - 70, alturaTela / 2 - 50);
+
+        //Posição do botao refresh na tela
+        refreshImageButton.setPosition(larguraTela / 2 - 70, alturaTela / 2 - 250);
 
         //Posição que o Passaro começa
         posicaoInicialVerticalDoPassaro = alturaTela / 2;
@@ -244,16 +250,21 @@ public class MyFlappyBird extends ApplicationAdapter {
 
     private void reiniciarJogo() {
         rotacaoPassaro = 0;
-        //Tocou na tela para reiniciar
-        if (Gdx.input.justTouched()) {
-            pontuacao = 0;
-            estadoDoJogo = 0;
-            velocidadeQueda = 0;
-            marcouPonto = false;
-            posicaoInicialVerticalDoPassaro = alturaTela / 2;
-            posicaoMovimentoCanoHorizontal = larguraTela;
-            posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
-        }
+
+        //Tocou no botão refresh
+        refreshImageButton.addListener(new EventListener() {
+            @Override
+            public boolean handle(Event event) {
+                pontuacao = 0;
+                estadoDoJogo = 0;
+                velocidadeQueda = 0;
+                marcouPonto = false;
+                posicaoInicialVerticalDoPassaro = alturaTela / 2;
+                posicaoMovimentoCanoHorizontal = larguraTela;
+                posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
+                return false;
+            }
+        });
     }
 
     private void verificaColisao() {
@@ -300,7 +311,7 @@ public class MyFlappyBird extends ApplicationAdapter {
         sprite.draw(batch);
 
         //Desenhando pontuação
-        if (estadoDoJogo == 1) {
+        if (estadoDoJogo == 1 || estadoDoJogo == 2) {
             placar.draw(batch, String.valueOf(pontuacao), larguraTela / 2, alturaTela - 50);
         }
 
@@ -313,8 +324,18 @@ public class MyFlappyBird extends ApplicationAdapter {
 
         batch.end();
 
-        //Desenhando stage
+        //Desenhando stage do play button
         if (estadoDoJogo == 0) {
+            stage.clear();
+            stage.addActor(playImageButton);
+            stage.act();
+            stage.draw();
+        }
+
+        //Desenhando stage do refresh button
+        if (estadoDoJogo == 2) {
+            stage.clear();
+            stage.addActor(refreshImageButton);
             stage.act();
             stage.draw();
         }
