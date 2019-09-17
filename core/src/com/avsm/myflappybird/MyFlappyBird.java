@@ -34,9 +34,7 @@ public class MyFlappyBird extends ApplicationAdapter {
     private Texture canoBaixo2;
     private Texture canoTopo2;
     private Texture gameOver;
-    private Texture playButton;
     private ImageButton playImageButton;
-    private Texture refreshButton;
     private ImageButton refreshImageButton;
     private Random numeroRandomico;
     private BitmapFont placar;
@@ -50,31 +48,24 @@ public class MyFlappyBird extends ApplicationAdapter {
     private OrthographicCamera camera;
     private Viewport viewport;
     private Stage stage;
+
     private final float VIRTUAL_WIDTH = 720;
     private final float VIRTUAL_HEIGHT = 1440;
-
-
-    //Atributos de configuração
     private float larguraTela;
     private float alturaTela;
-
     private int pontuacao = 0;
-
     private int rotacaoPassaro = 0;
-    private Sprite sprite;
 
     //Estado 0 = jogo não iniciado.
     //Estado 1 = jogo iniciado.
     //Estado 2 = game over.
     private int estadoDoJogo = 0;
-
     private float posicaoInicialVerticalDoPassaro;
     private float variacao = 0;
     private float velocidadeQueda = 0;
     private float posicaoMovimentoCanoHorizontal;
     private float posicaoMovimentoCano2Horizontal;
     private float espacoEntreCanos;
-    private float deltaTime;
     private float alturaEntreCanosRandomica;
     private float alturaEntreCanosRandomica2;
     private boolean marcouPonto;
@@ -93,7 +84,7 @@ public class MyFlappyBird extends ApplicationAdapter {
         //Limpar frames de execuções anteriores
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        deltaTime = Gdx.graphics.getDeltaTime();
+        float deltaTime = Gdx.graphics.getDeltaTime();
 
         //Bater de asas do passaro
         variacao += deltaTime * 10;
@@ -184,12 +175,12 @@ public class MyFlappyBird extends ApplicationAdapter {
         passaroCirculo = new Circle();
 
         //Textura do play button
-        playButton = new Texture("play_button.png");
-        playImageButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(playButton)));
+        playImageButton = new ImageButton(new TextureRegionDrawable(
+                new TextureRegion(new Texture("play_button.png"))));
 
         //Textura do refresh button
-        refreshButton = new Texture("refresh_button.png");
-        refreshImageButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(refreshButton)));
+        refreshImageButton = new ImageButton(new TextureRegionDrawable(
+                new TextureRegion(new Texture("refresh_button.png"))));
 
         //Texturas do passaro
         passaros = new Texture[3];
@@ -215,6 +206,7 @@ public class MyFlappyBird extends ApplicationAdapter {
         camera.position.set(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, 0);
         viewport = new StretchViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
 
+        //Config de layout
         larguraTela = VIRTUAL_WIDTH;
         alturaTela = VIRTUAL_HEIGHT;
 
@@ -248,37 +240,6 @@ public class MyFlappyBird extends ApplicationAdapter {
         });
     }
 
-    private void reiniciarJogo() {
-        rotacaoPassaro = 0;
-
-        //Tocou no botão refresh
-        refreshImageButton.addListener(new EventListener() {
-            @Override
-            public boolean handle(Event event) {
-                pontuacao = 0;
-                estadoDoJogo = 0;
-                velocidadeQueda = 0;
-                marcouPonto = false;
-                posicaoInicialVerticalDoPassaro = alturaTela / 2;
-                posicaoMovimentoCanoHorizontal = larguraTela;
-                posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
-                return false;
-            }
-        });
-    }
-
-    private void verificaColisao() {
-        //Verifica se houve colisão
-        if (Intersector.overlaps(passaroCirculo, retanguloCanoBaixo)
-                || Intersector.overlaps(passaroCirculo, retanguloCanoTopo)
-                || Intersector.overlaps(passaroCirculo, retanguloCanoTopo2)
-                || Intersector.overlaps(passaroCirculo, retanguloCanoBaixo2)
-                || posicaoInicialVerticalDoPassaro <= 0
-                || posicaoInicialVerticalDoPassaro >= alturaTela) {
-            estadoDoJogo = 2;
-        }
-    }
-
     private void configDoBatch() {
         //Configurar dados de projeção da camera
         batch.setProjectionMatrix(camera.combined);
@@ -305,7 +266,7 @@ public class MyFlappyBird extends ApplicationAdapter {
 
         //Desenhando array de passaros
 //        batch.draw(passaros[(int) variacao], 120, posicaoInicialVerticalDoPassaro);
-        sprite = new Sprite(passaros[(int) variacao]);
+        Sprite sprite = new Sprite(passaros[(int) variacao]);
         sprite.rotate(rotacaoPassaro);
         sprite.setPosition(120, posicaoInicialVerticalDoPassaro);
         sprite.draw(batch);
@@ -341,6 +302,25 @@ public class MyFlappyBird extends ApplicationAdapter {
         }
     }
 
+    private void reiniciarJogo() {
+        rotacaoPassaro = 0;
+
+        //Tocou no botão refresh
+        refreshImageButton.addListener(new EventListener() {
+            @Override
+            public boolean handle(Event event) {
+                pontuacao = 0;
+                estadoDoJogo = 0;
+                velocidadeQueda = 0;
+                marcouPonto = false;
+                posicaoInicialVerticalDoPassaro = alturaTela / 2;
+                posicaoMovimentoCanoHorizontal = larguraTela;
+                posicaoMovimentoCano2Horizontal = posicaoMovimentoCanoHorizontal + larguraTela / 2;
+                return false;
+            }
+        });
+    }
+
     private void instanciandoAsFormasDeColisao() {
         passaroCirculo.set(120 + passaros[0].getWidth() / 2,
                 posicaoInicialVerticalDoPassaro + passaros[0].getHeight() / 2,
@@ -369,6 +349,18 @@ public class MyFlappyBird extends ApplicationAdapter {
                 + espacoEntreCanos / 2 + alturaEntreCanosRandomica2,
                 canoTopo.getWidth(), canoTopo.getHeight()
         );
+    }
+
+    private void verificaColisao() {
+        //Verifica se houve colisão
+        if (Intersector.overlaps(passaroCirculo, retanguloCanoBaixo)
+                || Intersector.overlaps(passaroCirculo, retanguloCanoTopo)
+                || Intersector.overlaps(passaroCirculo, retanguloCanoTopo2)
+                || Intersector.overlaps(passaroCirculo, retanguloCanoBaixo2)
+                || posicaoInicialVerticalDoPassaro <= 0
+                || posicaoInicialVerticalDoPassaro >= alturaTela) {
+            estadoDoJogo = 2;
+        }
     }
 
     @Override
