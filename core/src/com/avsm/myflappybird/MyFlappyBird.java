@@ -9,9 +9,16 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -27,18 +34,22 @@ public class MyFlappyBird extends ApplicationAdapter {
     private Texture canoBaixo2;
     private Texture canoTopo2;
     private Texture gameOver;
+    private Texture playButton;
     private Random numeroRandomico;
     private BitmapFont placar;
-    private BitmapFont mensagem;
+    private BitmapFont mensagemGameOver;
+    private BitmapFont tituloGame;
     private Circle passaroCirculo;
+    private ImageButton playImageButton;
     private Rectangle retanguloCanoTopo;
     private Rectangle retanguloCanoBaixo;
     private Rectangle retanguloCanoTopo2;
     private Rectangle retanguloCanoBaixo2;
     private OrthographicCamera camera;
     private Viewport viewport;
-    private final float VIRTUAL_WIDTH = 768;
-    private final float VIRTUAL_HEIGHT = 1280;
+    private Stage stage;
+    private final float VIRTUAL_WIDTH = 720;
+    private final float VIRTUAL_HEIGHT = 1440;
 
 
     //Atributos de configuração
@@ -145,11 +156,6 @@ public class MyFlappyBird extends ApplicationAdapter {
         verificaColisao();
     }
 
-    @Override
-    public void resize(int width, int height) {
-        viewport.update(width, height);
-    }
-
     private void inicializandoObjetos() {
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
@@ -162,13 +168,24 @@ public class MyFlappyBird extends ApplicationAdapter {
         placar.setColor(Color.WHITE);
         placar.getData().setScale(6);
 
+        //Titulo Game
+        tituloGame = new BitmapFont();
+        tituloGame.setColor(Color.WHITE);
+        tituloGame.getData().setScale(6);
+
         //Mensagem de GameOver
-        mensagem = new BitmapFont();
-        mensagem.setColor(Color.WHITE);
-        mensagem.getData().setScale(3);
+        mensagemGameOver = new BitmapFont();
+        mensagemGameOver.setColor(Color.WHITE);
+        mensagemGameOver.getData().setScale(3);
 
         //Forma do Passaro para colisão
         passaroCirculo = new Circle();
+
+        //Textura do play button
+        playButton = new Texture("play_button.png");
+        TextureRegion myTextureRegion = new TextureRegion(playButton);
+        TextureRegionDrawable myTexRegionDrawable = new TextureRegionDrawable(myTextureRegion);
+        playImageButton = new ImageButton(myTexRegionDrawable);
 
         //Texturas do passaro
         passaros = new Texture[3];
@@ -197,6 +214,14 @@ public class MyFlappyBird extends ApplicationAdapter {
         larguraTela = VIRTUAL_WIDTH;
         alturaTela = VIRTUAL_HEIGHT;
 
+        //Config do stage
+        stage = new Stage(new StretchViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera));
+        Gdx.input.setInputProcessor(stage);
+        stage.addActor(playImageButton);
+
+        //Posição do botao na tela
+        playImageButton.setPosition(larguraTela / 2 - 70, alturaTela / 2 - 50);
+
         //Posição que o Passaro começa
         posicaoInicialVerticalDoPassaro = alturaTela / 2;
 
@@ -207,10 +232,14 @@ public class MyFlappyBird extends ApplicationAdapter {
     }
 
     private void inicioJogo() {
-        //Tocou na tela para começar
-        if (Gdx.input.justTouched()) {
-            estadoDoJogo = 1;
-        }
+        //Tocou no botão para começar
+        playImageButton.addListener(new EventListener() {
+            @Override
+            public boolean handle(Event event) {
+                estadoDoJogo = 1;
+                return false;
+            }
+        });
     }
 
     private void reiniciarJogo() {
@@ -248,6 +277,11 @@ public class MyFlappyBird extends ApplicationAdapter {
         //Desenhando plano de fundo
         batch.draw(fundo, 0, 0, larguraTela, alturaTela);
 
+        //Desenhando titulo do game
+        if (estadoDoJogo == 0) {
+            tituloGame.draw(batch, "Flappy Bird", larguraTela / 2 - 200, alturaTela - 100);
+        }
+
         //Desenhando os Canos
         batch.draw(canoTopo, posicaoMovimentoCanoHorizontal, alturaTela / 2
                 + espacoEntreCanos / 2 + alturaEntreCanosRandomica);
@@ -266,16 +300,24 @@ public class MyFlappyBird extends ApplicationAdapter {
         sprite.draw(batch);
 
         //Desenhando pontuação
-        placar.draw(batch, String.valueOf(pontuacao), larguraTela / 2, alturaTela - 50);
+        if (estadoDoJogo == 1) {
+            placar.draw(batch, String.valueOf(pontuacao), larguraTela / 2, alturaTela - 50);
+        }
 
         //Tela de fim de jogo
         if (estadoDoJogo == 2) {
             batch.draw(gameOver, larguraTela / 2 - gameOver.getWidth() / 2, alturaTela / 2);
-            mensagem.draw(batch, "Toque para reiniciar!",
+            mensagemGameOver.draw(batch, "Toque para reiniciar!",
                     larguraTela / 2 - 200, alturaTela / 2 - gameOver.getHeight() / 2);
         }
 
         batch.end();
+
+        //Desenhando stage
+        if (estadoDoJogo == 0) {
+            stage.act();
+            stage.draw();
+        }
     }
 
     private void instanciandoAsFormasDeColisao() {
@@ -306,6 +348,11 @@ public class MyFlappyBird extends ApplicationAdapter {
                 + espacoEntreCanos / 2 + alturaEntreCanosRandomica2,
                 canoTopo.getWidth(), canoTopo.getHeight()
         );
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height);
     }
 }
 
