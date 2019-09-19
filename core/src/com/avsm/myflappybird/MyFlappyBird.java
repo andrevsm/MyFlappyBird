@@ -2,6 +2,7 @@ package com.avsm.myflappybird;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -51,6 +52,8 @@ public class MyFlappyBird extends ApplicationAdapter {
     private Stage stage;
     private Sound jumpSound;
     private Sound gameOverSound;
+    private Sound coinSound;
+    private Music backgroundSound;
 
     private final float VIRTUAL_WIDTH = 720;
     private final float VIRTUAL_HEIGHT = 1440;
@@ -89,6 +92,14 @@ public class MyFlappyBird extends ApplicationAdapter {
 
         float deltaTime = Gdx.graphics.getDeltaTime();
 
+        //Som de background
+        if(estadoDoJogo == 0) {
+            if (!backgroundSound.isLooping()) {
+                backgroundSound.setLooping(true);
+                backgroundSound.play();
+            }
+        }
+
         //Bater de asas do passaro
         variacao += deltaTime * 10;
         if (variacao > 2) variacao = 0;
@@ -114,7 +125,7 @@ public class MyFlappyBird extends ApplicationAdapter {
                 if (Gdx.input.justTouched()) {
                     rotacaoPassaro -= rotacaoPassaro - 20;
                     velocidadeQueda = -15;
-                    jumpSound.play(1.0f);
+                    jumpSound.play(0.7f);
                 }
 
                 //Verifica se o cano 1 saiu da tela
@@ -135,6 +146,7 @@ public class MyFlappyBird extends ApplicationAdapter {
                 if (posicaoMovimentoCanoHorizontal < 120 ||
                         posicaoMovimentoCano2Horizontal < 120) {
                     if (!marcouPonto) {
+                        coinSound.play(0.8f);
                         pontuacao++;
                         marcouPonto = true;
                     }
@@ -208,7 +220,13 @@ public class MyFlappyBird extends ApplicationAdapter {
         jumpSound = Gdx.audio.newSound(Gdx.files.internal("jump_sound.wav"));
 
         //Som de gameover
-        gameOverSound = Gdx.audio.newSound(Gdx.files.internal("gameOver.wav"));
+        gameOverSound = Gdx.audio.newSound(Gdx.files.internal("gameOver1.wav"));
+
+        //Som ao pontuar
+        coinSound = Gdx.audio.newSound(Gdx.files.internal("coin.wav"));
+
+        //Som de background
+        backgroundSound = Gdx.audio.newMusic(Gdx.files.internal("background.wav"));
     }
 
     private void configInicial() {
@@ -370,7 +388,9 @@ public class MyFlappyBird extends ApplicationAdapter {
                 || posicaoInicialVerticalDoPassaro <= 0
                 || posicaoInicialVerticalDoPassaro >= alturaTela) {
             if(estadoDoJogo == 1) {
-                gameOverSound.play(1.0f);
+                backgroundSound.setLooping(false);
+                backgroundSound.stop();
+                gameOverSound.play(0.7f);
             }
             estadoDoJogo = 2;
         }
