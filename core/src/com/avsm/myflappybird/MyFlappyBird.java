@@ -2,6 +2,7 @@ package com.avsm.myflappybird;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -48,6 +49,8 @@ public class MyFlappyBird extends ApplicationAdapter {
     private OrthographicCamera camera;
     private Viewport viewport;
     private Stage stage;
+    private Sound jumpSound;
+    private Sound gameOverSound;
 
     private final float VIRTUAL_WIDTH = 720;
     private final float VIRTUAL_HEIGHT = 1440;
@@ -107,10 +110,11 @@ public class MyFlappyBird extends ApplicationAdapter {
                 posicaoMovimentoCanoHorizontal -= deltaTime * 400;
                 posicaoMovimentoCano2Horizontal -= deltaTime * 400;
 
-                //Touch do passaro
+                //Touch do pulo do passaro
                 if (Gdx.input.justTouched()) {
                     rotacaoPassaro -= rotacaoPassaro - 20;
                     velocidadeQueda = -15;
+                    jumpSound.play(1.0f);
                 }
 
                 //Verifica se o cano 1 saiu da tela
@@ -199,6 +203,12 @@ public class MyFlappyBird extends ApplicationAdapter {
 
         //Textura de GameOver
         gameOver = new Texture("game_over.png");
+
+        //Som ao pular
+        jumpSound = Gdx.audio.newSound(Gdx.files.internal("jump_sound.wav"));
+
+        //Som de gameover
+        gameOverSound = Gdx.audio.newSound(Gdx.files.internal("gameOver.wav"));
     }
 
     private void configInicial() {
@@ -359,6 +369,9 @@ public class MyFlappyBird extends ApplicationAdapter {
                 || Intersector.overlaps(passaroCirculo, retanguloCanoBaixo2)
                 || posicaoInicialVerticalDoPassaro <= 0
                 || posicaoInicialVerticalDoPassaro >= alturaTela) {
+            if(estadoDoJogo == 1) {
+                gameOverSound.play(1.0f);
+            }
             estadoDoJogo = 2;
         }
     }
